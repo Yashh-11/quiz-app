@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Dev Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Developer Style -->
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-card: #020617;
+            --border-subtle: #1f2937;
+            --accent: #22c55e;
+            --accent-soft: rgba(34, 197, 94, 0.15);
+            --danger: #f97373;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --code-bg: #020617;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                sans-serif;
+            background: radial-gradient(circle at top, #1d283a 0, #020617 60%);
+            color: var(--text-main);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dev-shell {
+            max-width: 640px;
+            width: 100%;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(145deg, #020617, #020617);
+            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .dev-shell-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: #020617;
+        }
+
+        .dev-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dev-dot.red {
+            background: #f87171;
+        }
+
+        .dev-dot.yellow {
+            background: #facc15;
+        }
+
+        .dev-dot.green {
+            background: #4ade80;
+        }
+
+        .dev-tab {
+            margin-left: 12px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .dev-tab span {
+            color: var(--accent);
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 11px;
+        }
+
+        .dev-shell-body {
+            padding: 18px 18px 16px;
+        }
+
+        .dev-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .dev-title-main {
+            font-size: 14px;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            color: var(--text-muted);
+        }
+
+        .dev-title-badge {
+            font-size: 11px;
+            border-radius: 999px;
+            padding: 3px 9px;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .dev-question {
+            font-size: 18px;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        .dev-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            flex-wrap: wrap;
+        }
+
+        /* ====== BIGGER TOP BADGE "BUTTONS" ====== */
+        .dev-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 6px 14px;
+            /* bigger padding */
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-subtle);
+            font-size: 13px;
+            /* bigger text */
+        }
+
+        .dev-badge span.key {
+            color: var(--accent);
+            font-size: 12px;
+        }
+
+        /* Score badge special styling */
+        .dev-badge-score {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dev-badge-score::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.15), transparent 55%);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Score number bigger */
+        .dev-badge-score span:last-child {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Timer badge */
+        .dev-badge-timer span.value {
+            font-weight: 700;
+            font-size: 16px;
+            /* bigger timer text */
+        }
+
+        .timer-danger {
+            border-color: var(--danger);
+            color: #fecaca;
+        }
+
+        .timer-danger span.key {
+            color: #fecaca;
+        }
+
+        /* Pulse animation when score updates */
+        @keyframes scorePulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+            }
+
+            60% {
+                transform: scale(1.07);
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        .score-badge-pulse {
+            animation: scorePulse 0.45s ease-out;
+        }
+
+        .dev-options {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .dev-option-btn {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-main);
+            font-size: 14px;
+            padding: 8px 11px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: border 0.1s ease, background 0.1s ease, transform 0.05s ease;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+        }
+
+        .dev-option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .dev-option-btn:disabled {
+            cursor: default;
+            opacity: 0.95;
+        }
+
+        .dev-option-key {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .dev-option-btn.correct {
+            background: #052e16;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
+        }
+
+        .dev-option-btn.wrong {
+            background: #450a0a;
+            border-color: #f97373;
+            box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25);
+        }
+
+        .dev-footer {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dev-console {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #020617;
+            border: 1px solid var(--border-subtle);
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            max-height: 78px;
+            overflow-y: auto;
+        }
+
+        .dev-console-line span.prefix {
+            color: #4ade80;
+        }
+
+        .dev-console-line span.error {
+            color: #f97373;
+        }
+
+        .btn-dev {
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 12px;
+            border-radius: 999px;
+            padding-inline: 14px;
+            padding-block: 6px;
+        }
+
+        #nextBtn {
+            background: var(--accent);
+            border: 1px solid var(--accent);
+            color: #022c22;
+        }
+
+        #nextBtn:disabled {
+            opacity: 0.6;
+        }
+
+        #restartBtn {
+            border-color: var(--border-subtle);
+            color: var(--text-muted);
+            background: transparent;
+        }
+
+        /* ========= SCOREBOARD UI + BIGGER SCORE ========= */
+
+        @keyframes scoreboardPop {
+            0% {
+                transform: translateY(16px) scale(0.9);
+                opacity: 0;
+            }
+
+            60% {
+                transform: translateY(0) scale(1.03);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes scoreGlow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.9);
+            }
+
+            100% {
+                box-shadow: 0 0 40px 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        .scoreboard-panel {
+            margin-top: 10px;
+            padding: 14px 14px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 60%),
+                rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(18px);
+            display: none;
+            opacity: 0;
+            transform: translateY(10px) scale(0.98);
+        }
+
+        .scoreboard-panel.show {
+            display: block;
+            animation: scoreboardPop 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .scoreboard-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .score-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, #bbf7d0, #22c55e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #022c22;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 16px;
+            font-weight: 800;
+            animation: scoreGlow 1s ease-out 1;
+        }
+
+        .score-circle span.total {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .score-main-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .score-sub-text {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .score-meta-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+            font-size: 11px;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            color: var(--text-muted);
+        }
+
+        .score-meta-pill {
+            flex: 1;
+            border-radius: 999px;
+            border: 1px dashed rgba(148, 163, 184, 0.6);
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .score-meta-pill span.label {
+            color: var(--accent);
+        }
+
+        /* ========= CONFETTI / FIREWORK EFFECT ========= */
+
+        .confetti-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 6px;
+            height: 14px;
+            border-radius: 999px;
+            opacity: 0;
+            transform: translate3d(0, -100%, 0) rotateZ(0deg);
+            animation-name: confettiFall;
+            animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+            animation-iteration-count: 1;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translate3d(0, -100%, 0) rotateZ(0deg);
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate3d(0, 110vh, 0) rotateZ(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dev-shell-body {
+                padding: 14px 12px 12px;
+            }
+
+            .dev-question {
+                font-size: 16px;
+            }
+
+            .score-circle {
+                width: 64px;
+                height: 64px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Confetti / fireworks overlay -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <div class="dev-shell">
+        <!-- Top "code editor" header -->
+        <div class="dev-shell-header">
+            <div class="d-flex gap-2">
+                <div class="dev-dot red"></div>
+                <div class="dev-dot yellow"></div>
+                <div class="dev-dot green"></div>
+            </div>
+            <div class="dev-tab">
+                <span>DevQuiz.js</span>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="dev-shell-body">
+            <div class="dev-title-row">
+                <div class="dev-title-main">
+                    // Dev Quiz <span style="color:#4ade80">v1.0</span>
+                </div>
+                <div class="dev-title-badge">
+                    mode: <span style="color:#4ade80">"MCQ"</span>
+                </div>
+            </div>
+
+            <div class="dev-meta-row">
+                <div class="dev-badge">
+                    <span class="key">question</span>
+                    <span id="questionNumber">1 / 5</span>
+                </div>
+
+                <div class="dev-badge dev-badge-timer" id="timerBadge">
+                    <span class="key">timer</span>
+                    <span class="value" id="timerText">30s</span>
+                </div>
+
+                <div class="dev-badge dev-badge-score" id="scoreBadge">
+                    <span class="key">score</span>
+                    <span id="scoreInfo">0</span>
+                </div>
+            </div>
+
+            <div class="dev-question" id="questionText">
+                Question will come here
+            </div>
+
+            <div class="dev-options" id="optionsContainer">
+                <!-- Buttons injected via JS -->
+            </div>
+
+            <div class="dev-footer">
+                <button class="btn btn-outline-secondary btn-dev" id="restartBtn" style="display:none;">
+                    reset()
+                </button>
+                <button class="btn btn-dev ms-auto" id="nextBtn" disabled>
+                    next() ▶
+                </button>
+            </div>
+
+            <!-- Scoreboard panel -->
+            <div id="resultText" class="scoreboard-panel"></div>
+
+            <div class="dev-console" id="consoleBox">
+                <div class="dev-console-line">
+                    <span class="prefix">dev@quiz</span>:~$ console.log("Ready when you are…")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./script.js"></script>
+
+
+</body>
+
+</html>
